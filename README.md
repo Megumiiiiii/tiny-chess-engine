@@ -1,30 +1,19 @@
-# tiny-chess-01 starter
+# tiny-chess-engine
 
-A working entry to fork: `main.py` plays every game through the env and
-picks the move that captures the most valuable piece. It is a template,
-not a contender. Replace its one-line choice with a real search.
+A deterministic 4 KB chess engine in Python, entered in the make.fun tiny-chess-01 bounty.
 
-## The size rule
+main.py is the whole engine: an lzma-packed payload plus its unpacker, 4,064 bytes.
+It plays through the trial env at MAKEFUN_ENV_URL (POST /game, POST /move).
 
-- `main.py` is the whole engine: at most 4,096 bytes as committed,
-  Python 3.13, standard library only. It reads, imports or execs no other
-  file in the repository.
-- Every byte counts: comments, whitespace, docstrings.
-- Compression is allowed and counted. A `main.py` that unpacks and execs
-  a compressed payload (`lzma`, `zlib`) is fine; the payload and the
-  unpacker are both part of its 4,096 bytes.
-- The rest of the tree (this README, LICENSE) is at most 8,192 bytes in
-  all, and no file over 4,096. MIT, BSD, ISC and 0BSD licences fit.
-- Search to a fixed depth or node count, never a clock: the trial is
-  replayed and must play the same moves.
+## How it works
 
-## Grade it locally
+- 120-square board, pseudo-legal move generation, en passant and castling.
+- Alpha-beta with null-window PVS, a transposition table, killer and history ordering,
+  quiescence search with checks, null-move pruning, late move reductions, check extension.
+- Evaluation: PeSTO piece-square tables blended for the middlegame plus the endgame king
+  table, with material.
 
-You need Docker and the `makefun` CLI. Download the competition's dev
-kit, unpack it, and from inside it run:
+## Determinism
 
-    makefun grade-local --kit . --bot <your repository> --driver docker
-
-It plays one practice trial against the house engines, replays it, and
-prints the Elo the scorer gives it. Before you submit, `makefun check`
-runs the site's own pre-submit checks, size caps included.
+No clock and no unseeded randomness: every move comes from a fixed node budget, so a replay
+plays the same game. The budget is 75,000 nodes a move for the first 700 moves, 37,500 after.
